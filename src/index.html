@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Launcher</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Background Layer -->
+    <div id="background"></div>
+    <div class="overlay"></div>
+
+    <div id="app">
+        <!-- Banner -->
+        <div class="offline-banner" id="offline-banner">No Internet Connection - Offline Mode</div>
+
+        <!-- Top Controls (Absolute Top-Right) -->
+        <div class="top-bar">
+            <button class="control-btn" id="settings-btn" title="Settings">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+                </svg>
+            </button>
+            <button class="control-btn" id="minimize-btn" title="Minimize">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </button>
+            <button class="control-btn" id="close-btn" title="Close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Main Layout Grid -->
+        <div class="main-layout">
+
+            <!-- Left Area: Logo & News -->
+            <div class="left-col">
+                <div class="logo-area">
+                    <img src="../src-tauri/icons/logo.png" alt="Game Logo" class="game-logo" id="game-logo">
+                    <!-- Backup text if needed, or hide it -->
+                    <!-- <h1 class="game-title" id="game-title-display">Game Launcher</h1> -->
+                </div>
+
+                <div class="news-panel glass-panel" id="news-panel">
+                    <div class="news-header">
+                        <h3>Events Notice</h3>
+                        <div class="dots"><span class="active"></span><span></span></div>
+                    </div>
+                    <div class="news-content" id="news-content-area">
+                        Loading news...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Area: Sidebar -->
+            <div class="right-col">
+                <div class="sidebar glass-panel">
+                    <button class="nav-item active" title="Home">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg>
+                    </button>
+                    <button class="nav-item" title="Store">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <path d="M16 10a4 4 0 0 1-8 0"></path>
+                        </svg>
+                    </button>
+                    <button class="nav-item" title="Mail">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z">
+                            </path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                    </button>
+                    <button class="nav-item" title="Community">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M2 12h20"></path>
+                            <path
+                                d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                            </path>
+                        </svg>
+                    </button>
+                    <div class="spacer"></div>
+                    <button class="nav-item" title="Help">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Bottom Area -->
+        <div class="bottom-action-bar">
+            <!-- Download / Play Button -->
+            <div class="action-wrapper">
+                <div class="progress-info" id="progress-info" style="display: none;">
+                    <span id="progress-text">Downloading...</span>
+                    <span id="progress-percent">0%</span>
+                </div>
+                <button class="hero-btn" id="action-btn">
+                    <span class="btn-icon">⬇</span>
+                    <span class="btn-text" id="btn-text">Download</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="close-modal-x" id="close-modal-btn">×</button>
+            </div>
+            <div class="setting-row">
+                <label>Language</label>
+                <div class="radio-group">
+                    <label class="radio-label"><input type="radio" name="lang" value="vi"> Tiếng Việt</label>
+                    <label class="radio-label"><input type="radio" name="lang" value="en"> English</label>
+                    <label class="radio-label"><input type="radio" name="lang" value="jp"> 日本語</label>
+                    <label class="radio-label"><input type="radio" name="lang" value="zh"> 中文</label>
+                </div>
+            </div>
+            <div class="setting-row">
+                <label>Close Window</label>
+                <div class="radio-group vertical">
+                    <label class="radio-label"><input type="radio" name="close" value="MinimizeToTray"> Minimize to
+                        system tray</label>
+                    <label class="radio-label"><input type="radio" name="close" value="Exit"> Exit Launcher</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="primary-btn" id="save-settings">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+
+</html>

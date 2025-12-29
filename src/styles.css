@@ -1,0 +1,481 @@
+:root {
+  --bg-color: #0d1117;
+  --text-color: #ffffff;
+  --text-secondary: #8b949e;
+  --accent-color: #FFD700;
+  /* Yellow for specific "Riichi City" feel */
+  --accent-hover: #e6c200;
+  --play-color: #2ec4b6;
+  --glass-bg: rgba(22, 27, 34, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --font-family: 'Segoe UI', Inter, system-ui, sans-serif;
+  --sidebar-width: 80px;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  background-color: transparent;
+  /* Transparent for rounded corners on frameless */
+  color: var(--text-color);
+  overflow: hidden;
+  user-select: none;
+  height: 100vh;
+  width: 100vw;
+  border-radius: 16px;
+  /* Rounded Window Corners */
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  /* Shadow since no OS border */
+}
+
+/* Background & Overlay: Needs border radius matching window */
+#background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  z-index: -2;
+  transition: background-image 1s ease-in-out;
+  /* Smooth slide transition */
+  filter: brightness(0.9);
+  border-radius: 16px;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: radial-gradient(circle at top left, transparent 40%, rgba(0, 0, 0, 0.6) 100%);
+  z-index: -1;
+  border-radius: 16px;
+}
+
+/* App Grid Layout */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0;
+}
+
+/* 1. Offline Banner */
+.offline-banner {
+  background: #ff4757;
+  color: white;
+  text-align: center;
+  padding: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: none;
+  position: relative;
+  z-index: 1000;
+}
+
+/* 2. Top Bar */
+.top-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 15px 20px;
+  -webkit-app-region: drag;
+  z-index: 50;
+}
+
+.control-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  margin-left: 15px;
+  -webkit-app-region: no-drag;
+  transition: color 0.2s, transform 0.2s;
+  padding: 5px;
+  border-radius: 5px;
+}
+
+.control-btn:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.control-btn:active {
+  transform: scale(0.95);
+}
+
+/* 3. Main Layout */
+.main-layout {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 40px 40px 40px;
+  /* Sides and Bottom */
+  box-sizing: border-box;
+}
+
+/* Left Column */
+.left-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  max-width: 400px;
+}
+
+.logo-area {
+  margin-top: 20px;
+}
+
+.game-logo {
+  max-width: 250px;
+  /* Resize logo appropriately */
+  max-height: 150px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+}
+
+.game-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  margin: 0;
+  letter-spacing: -1px;
+  /* If image present, hide text or style appropriately */
+}
+
+/* News Panel */
+.glass-panel {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+.news-panel {
+  height: 220px;
+  width: 320px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease;
+}
+
+.news-panel:hover {
+  transform: translateY(-5px);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.news-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.news-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+}
+
+.dots {
+  display: flex;
+  gap: 5px;
+}
+
+.dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.dots span.active {
+  background: var(--accent-color);
+  width: 12px;
+  border-radius: 3px;
+}
+
+.news-content {
+  flex: 1;
+  overflow: hidden;
+  /* Hide scroll for cleaner usage, or custom scrollbar */
+}
+
+.news-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.news-item img {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  object-fit: cover;
+  margin-right: 12px;
+}
+
+.news-text h4 {
+  margin: 0 0 4px 0;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.news-text span {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+
+/* Right Column: Sidebar */
+.right-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sidebar {
+  width: var(--sidebar-width);
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.nav-item {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.8);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+}
+
+.nav-item.active {
+  background: var(--accent-color);
+  color: black;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+}
+
+.spacer {
+  flex: 1;
+}
+
+
+/* Bottom Action Bar */
+.bottom-action-bar {
+  position: absolute;
+  bottom: 40px;
+  right: 140px;
+  /* Left of Sidebar */
+  display: flex;
+  align-items: center;
+}
+
+.action-wrapper {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.hero-btn {
+  background: var(--accent-color);
+  color: #1a1a1a;
+  border: none;
+  border-radius: 50px;
+  /* Pill shape */
+  padding: 12px 40px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.hero-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 15px 40px rgba(255, 215, 0, 0.5);
+  background: var(--accent-hover);
+}
+
+.hero-btn:disabled {
+  background: #333;
+  color: #777;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.btn-icon {
+  font-size: 1.4rem;
+}
+
+.progress-info {
+  font-size: 0.9rem;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  font-weight: 600;
+  text-align: right;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+/* Settings Modal */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 200;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(5px);
+}
+
+.modal-content {
+  width: 500px;
+  background: #1c1c1e;
+  /* Darker solid background for settings, or glass */
+  /* Re-using glass-panel class but overriding if needed */
+  padding: 30px;
+  color: white;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 15px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.close-modal-x {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.close-modal-x:hover {
+  color: white;
+}
+
+.setting-row {
+  margin-bottom: 25px;
+}
+
+.setting-row label {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.radio-group {
+  display: flex;
+  gap: 20px;
+}
+
+.radio-group.vertical {
+  flex-direction: column;
+  gap: 12px;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.radio-label input[type="radio"] {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #555;
+  border-radius: 50%;
+  position: relative;
+  outline: none;
+}
+
+.radio-label input[type="radio"]:checked {
+  border-color: var(--accent-color);
+}
+
+.radio-label input[type="radio"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  background: var(--accent-color);
+  border-radius: 50%;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 30px;
+}
+
+.primary-btn {
+  background: var(--accent-color);
+  color: black;
+  border: none;
+  padding: 10px 30px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.primary-btn:hover {
+  background: var(--accent-hover);
+}
