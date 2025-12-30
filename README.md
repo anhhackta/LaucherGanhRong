@@ -88,13 +88,58 @@ LaucherGanhRong/
   "latest_version": "1.0.0",
   "game_zip": "https://...",
   "checksum": "sha256:HASH_OF_ZIP",
+  "server_status": "online",
+  "maintenance_message": "",
   "backgrounds": ["https://...", "https://..."],
   "news": [
-    {"title": "Update 1.0", "image": "https://...", "date": "2024.12.30"}
+    {
+      "title": "Update 1.0",
+      "image": "https://...",
+      "date": "2024.12.30",
+      "link": "https://yoursite.com/news/1"
+    }
   ],
   "languages": ["vi", "en", "jp", "zh"]
 }
 ```
+
+### Server Status Values
+
+| Value | Description |
+|-------|-------------|
+| `online` | Game is playable |
+| `maintenance` | Server maintenance, show message |
+| `closed` | Game is closed/offline |
+
+## Game ZIP Naming Convention
+
+Name your game zip file using this format:
+
+```
+{game-name}-v{version}.zip
+```
+
+**Examples:**
+- `ganhrong-v1.0.0.zip`
+- `ganhrong-v1.0.1.zip`
+- `ganhrong-v2.0.0.zip`
+
+**Rules:**
+1. Use lowercase letters
+2. Use hyphens `-` instead of spaces
+3. Prefix version with `v`
+4. Version format: `major.minor.patch` (e.g., `1.0.0`)
+
+**Folder Structure Inside ZIP:**
+```
+ganhrong-v1.0.0.zip
+└── game.exe           (required - main executable)
+└── assets/            (game assets)
+└── data/              (game data)
+└── ...                (other files)
+```
+
+> **Important:** The `version.txt` file is created automatically by the launcher after successful installation. Do NOT include it in your zip.
 
 ## Button Logic
 

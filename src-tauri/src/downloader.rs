@@ -3,10 +3,11 @@ use reqwest::Client;
 use std::cmp::min;
 use std::fs::{self, File};
 use std::io::{self, BufReader, Write};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use zip::ZipArchive;
 use sha2::{Sha256, Digest};
 use tauri::{AppHandle, Emitter};
+use crate::paths;
 
 // Event for frontend progress
 #[derive(Clone, serde::Serialize)]
@@ -24,7 +25,11 @@ pub async fn download_and_install_game<F>(
 ) -> Result<(), Box<dyn std::error::Error>> 
 where F: Fn(f32, String) + Send + Sync + 'static 
 {
-    let target_path = PathBuf::from("cache/game.tmp.zip");
+    let cache_dir = paths::get_cache_dir();
+    let game_dir = paths::get_game_dir();
+    
+    let _ = fs::create_dir_all(&cache_dir);
+    let target_path = cache_dir.join("game.tmp.zip");
     
     // 1. Download
     progress_callback(0.0, "Downloading...".to_string());
@@ -60,7 +65,7 @@ where F: Fn(f32, String) + Send + Sync + 'static
     progress_callback(100.0, "Installing...".to_string());
     app.emit("download-progress", DownloadProgressPayload { progress: 100.0, status: "Installing".to_string() })?;
     
-    let extract_path = PathBuf::from("cache/extracted_tmp");
+    let extract_path = cache_dir.join("extracted_tmp");
     if extract_path.exists() {
         fs::remove_dir_all(&extract_path)?;
     }
@@ -72,15 +77,14 @@ where F: Fn(f32, String) + Send + Sync + 'static
     fs::write(extract_path.join("version.txt"), version)?;
 
     // 4. Move to game/
-    let game_path = PathBuf::from("game");
-    if game_path.exists() {
-        fs::remove_dir_all(&game_path)?;
+    if game_dir.exists() {
+        fs::remove_dir_all(&game_dir)?;
     }
     
     // Rename/Move
     // Note: rename only works on same filesystem. 
     // Since cache and game are likely on same drive, this is usually atomic or fast.
-    fs::rename(extract_path, &game_path)?;
+    fs::rename(&extract_path, &game_dir)?;
     
     // Write installed version provided by manifest logic elsewhere, 
     // but here we just ensure the files are there.

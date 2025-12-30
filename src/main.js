@@ -19,7 +19,6 @@ let currentLang = "en";
 
 // Elements
 const elBackground = document.getElementById('background');
-const elNewsContent = document.getElementById('news-content-area');
 const elActionBtn = document.getElementById('action-btn');
 const elBtnText = document.getElementById('btn-text');
 const elProgressInfo = document.getElementById('progress-info');
@@ -27,11 +26,18 @@ const elProgressText = document.getElementById('progress-text');
 const elProgressPercent = document.getElementById('progress-percent');
 const elOfflineBanner = document.getElementById('offline-banner');
 
+// News Carousel Elements
+const elNewsSlides = document.getElementById('news-slides');
+const elNewsTitle = document.getElementById('news-title');
+const elNewsDate = document.getElementById('news-date');
+const elNewsDots = document.getElementById('news-dots');
+const elNewsPrev = document.getElementById('news-prev');
+const elNewsNext = document.getElementById('news-next');
+
 // Modals
 const elSettingsModal = document.getElementById('settings-modal');
 const elSettingsBtn = document.getElementById('settings-btn');
 const elCloseModalBtn = document.getElementById('close-modal-btn');
-const elSaveSettings = document.getElementById('save-settings');
 
 // Win Controls
 const elMinimizeBtn = document.getElementById('minimize-btn');
@@ -44,11 +50,15 @@ const navItems = document.querySelectorAll('.nav-item');
 let bgIndex = 0;
 let bgInterval = null;
 
+// News Carousel
+let newsData = [];
+let newsIndex = 0;
+let newsInterval = null;
+
 window.addEventListener('DOMContentLoaded', async () => {
     // Basic Listeners
     elSettingsBtn.onclick = () => elSettingsModal.style.display = 'flex';
     elCloseModalBtn.onclick = () => elSettingsModal.style.display = 'none';
-    elSaveSettings.onclick = saveSettings; // Still needed for Close Behavior? User said "instant lang switch" NO save button.
 
     // Sidebar interaction
     navItems.forEach(item => {
@@ -62,8 +72,13 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('input[name="lang"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
             setLanguage(e.target.value);
-            // Optional: Save config immediately? User said "do change language right away without save button".
-            // We can persist it in background.
+            saveConfigOnly();
+        });
+    });
+
+    // Close Behavior Radio Listeners (Instant Save)
+    document.querySelectorAll('input[name="close"]').forEach(radio => {
+        radio.addEventListener('change', () => {
             saveConfigOnly();
         });
     });
@@ -110,12 +125,11 @@ function bindWindowControls() {
     const appWindow = window.__TAURI__.window.getCurrentWindow();
     elMinimizeBtn.onclick = () => appWindow.minimize();
     elCloseBtn.onclick = async () => {
-        // Use configured behavior or default
-        if (currentConfig && currentConfig.close_behavior === 'Exit') {
-            appWindow.close();
+        // If MinimizeToTray is selected, hide window instead of closing
+        if (currentConfig && currentConfig.close_behavior === 'MinimizeToTray') {
+            appWindow.hide();
         } else {
-            appWindow.hide(); // Minimize to tray if configured, usually hide window
-            // If tray logic is "MinimizeToTray" -> hide.
+            appWindow.close();
         }
     };
 }
@@ -240,22 +254,90 @@ function updateProgress(progress, status) {
 }
 
 function renderNews(news) {
-    if (!news || news.length === 0) {
-        elNewsContent.innerHTML = "<div>No news available</div>";
+    newsData = news || [];
+    if (newsData.length === 0) {
+        elNewsSlides.innerHTML = '<div class="news-slide"><div style="padding:40px;text-align:center;color:#888">No news available</div></div>';
+        elNewsTitle.innerText = '';
+        elNewsDate.innerText = '';
         return;
     }
-    let html = "";
-    news.forEach(item => {
-        html += `
-        <div class="news-item">
-            <img src="${item.image}">
-            <div class="news-text">
-                <h4>${item.title}</h4>
-                <span>${item.date}</span>
-            </div>
-        </div>`;
+
+    // Create slides
+    let slidesHtml = '';
+    let dotsHtml = '';
+    newsData.forEach((item, i) => {
+        slidesHtml += `<div class="news-slide" data-index="${i}" data-link="${item.link || ''}"><img src="${item.image}" alt=""></div>`;
+        dotsHtml += `<span class="dot ${i === 0 ? 'active' : ''}" data-index="${i}"></span>`;
     });
-    elNewsContent.innerHTML = html;
+
+    elNewsSlides.innerHTML = slidesHtml;
+    elNewsDots.innerHTML = dotsHtml;
+
+    // Set initial
+    newsIndex = 0;
+    updateNewsDisplay();
+
+    // Add click listeners to slides
+    document.querySelectorAll('.news-slide').forEach(slide => {
+        slide.onclick = () => {
+            const link = slide.dataset.link;
+            if (link) window.__TAURI__.opener.openUrl(link);
+        };
+    });
+
+    // Add click listeners to dots
+    document.querySelectorAll('.news-dots .dot').forEach(dot => {
+        dot.onclick = () => {
+            newsIndex = parseInt(dot.dataset.index);
+            updateNewsDisplay();
+            resetNewsInterval();
+        };
+    });
+
+    // Navigation buttons
+    elNewsPrev.onclick = () => {
+        newsIndex = (newsIndex - 1 + newsData.length) % newsData.length;
+        updateNewsDisplay();
+        resetNewsInterval();
+    };
+
+    elNewsNext.onclick = () => {
+        newsIndex = (newsIndex + 1) % newsData.length;
+        updateNewsDisplay();
+        resetNewsInterval();
+    };
+
+    // Start auto-slide
+    startNewsInterval();
+}
+
+function updateNewsDisplay() {
+    if (newsData.length === 0) return;
+
+    // Move slides
+    elNewsSlides.style.transform = `translateX(-${newsIndex * 100}%)`;
+
+    // Update title and date
+    const current = newsData[newsIndex];
+    elNewsTitle.innerText = current.title;
+    elNewsDate.innerText = current.date;
+
+    // Update dots
+    document.querySelectorAll('.news-dots .dot').forEach((dot, i) => {
+        dot.classList.toggle('active', i === newsIndex);
+    });
+}
+
+function startNewsInterval() {
+    if (newsInterval) clearInterval(newsInterval);
+    newsInterval = setInterval(() => {
+        newsIndex = (newsIndex + 1) % newsData.length;
+        updateNewsDisplay();
+    }, 15000); // 15 seconds
+}
+
+function resetNewsInterval() {
+    startNewsInterval();
 }
 
 async function handleAction() {

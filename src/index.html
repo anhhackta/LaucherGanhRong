@@ -45,19 +45,30 @@
             <!-- Left Area: Logo & News -->
             <div class="left-col">
                 <div class="logo-area">
-                    <img src="../src-tauri/icons/logo.png" alt="Game Logo" class="game-logo" id="game-logo">
+                    <img src="assets/logo.png" alt="Game Logo" class="game-logo" id="game-logo">
                     <!-- Backup text if needed, or hide it -->
                     <!-- <h1 class="game-title" id="game-title-display">Game Launcher</h1> -->
                 </div>
 
                 <div class="news-panel glass-panel" id="news-panel">
                     <div class="news-header">
-                        <h3>Events Notice</h3>
-                        <div class="dots"><span class="active"></span><span></span></div>
+                        <div class="news-tabs">
+                            <span class="tab active">Events</span>
+                            <span class="tab">Notice</span>
+                        </div>
                     </div>
-                    <div class="news-content" id="news-content-area">
-                        Loading news...
+                    <div class="news-carousel">
+                        <div class="news-slides" id="news-slides">
+                            <!-- News items rendered by JS -->
+                        </div>
+                        <button class="carousel-btn prev" id="news-prev">‹</button>
+                        <button class="carousel-btn next" id="news-next">›</button>
                     </div>
+                    <div class="news-footer">
+                        <div class="news-title" id="news-title">Loading...</div>
+                        <div class="news-date" id="news-date"></div>
+                    </div>
+                    <div class="news-dots" id="news-dots"></div>
                 </div>
             </div>
 
@@ -150,9 +161,6 @@
                         system tray</label>
                     <label class="radio-label"><input type="radio" name="close" value="Exit"> Exit Launcher</label>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="primary-btn" id="save-settings">Save</button>
             </div>
         </div>
     </div>

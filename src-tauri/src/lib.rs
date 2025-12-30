@@ -2,6 +2,7 @@ mod config;
 mod downloader;
 mod game;
 mod manifest;
+mod paths;
 mod state;
 mod tray;
 
