@@ -83,6 +83,15 @@ window.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
+    // Logo click - open website
+    const logoLink = document.getElementById('logo-link');
+    if (logoLink) {
+        logoLink.onclick = (e) => {
+            e.preventDefault();
+            window.__TAURI__.opener.openUrl('https://ganhrong.tech');
+        };
+    }
+
     bindWindowControls();
 
     // 1. Get Config
