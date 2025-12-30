@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "tauri-app",
+  "productName": "GanhRong Launcher",
   "version": "0.1.0",
-  "identifier": "com.briarangry.tauri-app",
+  "identifier": "com.ganhrong.launcher",
   "build": {
     "frontendDist": "../src"
   },
@@ -10,9 +10,9 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "tauri-app",
-        "width": 800,
-        "height": 600,
+        "title": "Gánh Rồng Launcher",
+        "width": 1024,
+        "height": 640,
         "decorations": false,
         "transparent": true
       }

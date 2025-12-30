@@ -10,7 +10,7 @@ use crate::state::{AppState, GameStatus};
 use crate::config::LauncherConfig;
 use crate::manifest::GameManifest;
 
-const MANIFEST_URL: &str = "https://example.com/manifest.json"; // TODO: Replace with actual R2 URL
+const MANIFEST_URL: &str = "https://pub-22ad0c737da74e26888b5a5c396658c5.r2.dev/manifest.json"; // TODO: Replace with actual R2 URL
 
 #[tauri::command]
 async fn get_manifest(app: AppHandle, force_refresh: bool) -> Result<GameManifest, String> {

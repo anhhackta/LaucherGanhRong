@@ -12,7 +12,8 @@ let gameStatus = "Checking";
 const STRINGS = {
     "en": { "download": "Download", "play": "Play", "update": "Update", "checking": "Checking...", "offline": "Offline" },
     "vi": { "download": "Tải Game", "play": "Chơi Ngay", "update": "Cập Nhật", "checking": "Đang kiểm tra...", "offline": "Mất mạng" },
-    "jp": { "download": "ダウンロード", "play": "プレイ", "update": "更新", "checking": "確認中...", "offline": "オフライン" }
+    "jp": { "download": "ダウンロード", "play": "プレイ", "update": "更新", "checking": "確認中...", "offline": "オフライン" },
+    "zh": { "download": "下载", "play": "开始游戏", "update": "更新", "checking": "检查中...", "offline": "离线" }
 };
 let currentLang = "en";
 
