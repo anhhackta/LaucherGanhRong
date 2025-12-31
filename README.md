@@ -1,4 +1,4 @@
-# Gánh Rồng Launcher
+# Gánh Rong Launcher
 
 Minimal, high-performance single-game desktop launcher built with **Tauri + Rust**.
 
