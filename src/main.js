@@ -240,23 +240,40 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 
 function bindWindowControls() {
-    const appWindow = window.__TAURI__.window.getCurrentWindow();
+    try {
+        const appWindow = window.__TAURI__.window.getCurrentWindow();
+        console.log('Window controls binding...', appWindow);
 
-    // Minimize button behavior depends on close_behavior setting
-    elMinimizeBtn.onclick = async () => {
-        if (currentConfig && currentConfig.close_behavior === 'MinimizeToTray') {
-            // Hide to system tray (not visible on taskbar)
-            await appWindow.hide();
-        } else {
-            // Normal minimize (visible on taskbar)
-            await appWindow.minimize();
-        }
-    };
+        // Minimize button behavior depends on close_behavior setting
+        elMinimizeBtn.onclick = async () => {
+            console.log('Minimize clicked, config:', currentConfig);
+            try {
+                if (currentConfig && currentConfig.close_behavior === 'MinimizeToTray') {
+                    // Hide to system tray (not visible on taskbar)
+                    await appWindow.hide();
+                } else {
+                    // Normal minimize (visible on taskbar)
+                    await appWindow.minimize();
+                }
+            } catch (err) {
+                console.error('Minimize error:', err);
+            }
+        };
 
-    // Close button always closes the app
-    elCloseBtn.onclick = async () => {
-        await appWindow.close();
-    };
+        // Close button always closes the app
+        elCloseBtn.onclick = async () => {
+            console.log('Close clicked');
+            try {
+                await appWindow.close();
+            } catch (err) {
+                console.error('Close error:', err);
+            }
+        };
+
+        console.log('Window controls bound successfully');
+    } catch (err) {
+        console.error('Failed to bind window controls:', err);
+    }
 }
 
 // Language Logic

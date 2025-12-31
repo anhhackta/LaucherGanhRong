@@ -1,5 +1,5 @@
 {
   "language": "vi",
-  "close_behavior": "Exit",
+  "close_behavior": "MinimizeToTray",
   "launch_at_startup": false
 }
