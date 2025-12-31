@@ -10,10 +10,66 @@ let gameStatus = "Checking";
 
 // Localization Map
 const STRINGS = {
-    "en": { "download": "Download", "play": "Play", "update": "Update", "checking": "Checking...", "offline": "Offline" },
-    "vi": { "download": "Tải Game", "play": "Chơi Ngay", "update": "Cập Nhật", "checking": "Đang kiểm tra...", "offline": "Mất mạng" },
-    "jp": { "download": "ダウンロード", "play": "プレイ", "update": "更新", "checking": "確認中...", "offline": "オフライン" },
-    "zh": { "download": "下载", "play": "开始游戏", "update": "更新", "checking": "检查中...", "offline": "离线" }
+    "en": {
+        "download": "Download",
+        "play": "Play",
+        "update": "Update",
+        "checking": "Checking...",
+        "offline": "Offline",
+        "downloading": "Downloading...",
+        "pause": "Pause",
+        "resume": "Resume",
+        "settings": "Settings",
+        "language": "Language",
+        "closeWindow": "Close Window",
+        "minimizeToTray": "Minimize to System Tray",
+        "exitLauncher": "Exit Launcher"
+    },
+    "vi": {
+        "download": "Tải Game",
+        "play": "Chơi ngay",
+        "update": "Cập nhật",
+        "checking": "Đang kiểm tra...",
+        "offline": "Không có mạng",
+        "downloading": "Đang tải...",
+        "pause": "Tạm dừng",
+        "resume": "Tiếp tục",
+        "settings": "Cài đặt",
+        "language": "Ngôn ngữ",
+        "closeWindow": "Đóng cửa sổ",
+        "minimizeToTray": "Thu nhỏ xuống khay",
+        "exitLauncher": "Thoát Launcher"
+    },
+    "jp": {
+        "download": "ダウンロード",
+        "play": "プレイ",
+        "update": "更新",
+        "checking": "確認中...",
+        "offline": "オフライン",
+        "downloading": "ダウンロード中...",
+        "pause": "一時停止",
+        "resume": "再開",
+        "settings": "設定",
+        "language": "言語",
+        "closeWindow": "ウィンドウを閉じる",
+        "minimizeToTray": "トレイに最小化",
+        "exitLauncher": "ランチャーを終了"
+    },
+    "zh": {
+        "download": "下载",
+        "play": "开始游戏",
+        "update": "更新",
+        "checking": "检查中...",
+        "offline": "离线",
+        "downloading": "下载中...",
+        "pause": "暂停",
+        "resume": "继续",
+        "settings": "设置",
+        "language": "语言",
+        "closeWindow": "关闭窗口",
+        "minimizeToTray": "最小化到托盘",
+        "exitLauncher": "退出启动器"
+    }
 };
 let currentLang = "en";
 
@@ -46,6 +102,13 @@ const elCloseBtn = document.getElementById('close-btn');
 // Sidebar
 const navItems = document.querySelectorAll('.nav-item');
 
+// Loading Overlay
+const elLoadingOverlay = document.getElementById('loading-overlay');
+const elLoadingImg = document.getElementById('loading-img');
+const loadingImages = ['assets/loading1.png', 'assets/loading2.png'];
+let loadingImgIndex = 0;
+let loadingAnimInterval = null;
+
 // Slideshow
 let bgIndex = 0;
 let bgInterval = null;
@@ -55,16 +118,28 @@ let newsData = [];
 let newsIndex = 0;
 let newsInterval = null;
 
+// Sidebar links from manifest
+let sidebarLinks = {};
+
 window.addEventListener('DOMContentLoaded', async () => {
+    // Start loading animation
+    startLoadingAnimation();
+
     // Basic Listeners
     elSettingsBtn.onclick = () => elSettingsModal.style.display = 'flex';
     elCloseModalBtn.onclick = () => elSettingsModal.style.display = 'none';
 
-    // Sidebar interaction
+    // Sidebar interaction - Home stays active, others open links
     navItems.forEach(item => {
         item.onclick = () => {
-            navItems.forEach(n => n.classList.remove('active'));
-            item.classList.add('active');
+            const linkKey = item.dataset.link;
+            if (!linkKey) {
+                // Home button - do nothing, already active
+                return;
+            }
+            // Open link from manifest or default
+            const url = sidebarLinks[linkKey] || `https://ganhrong.tech/${linkKey}`;
+            window.__TAURI__.opener.openUrl(url);
         };
     });
 
@@ -107,8 +182,35 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     // Listeners
     listen('download-progress', (event) => {
-        const payload = event.payload;
-        updateProgress(payload.progress, payload.status);
+        const p = event.payload;
+        const percent = p.progress.toFixed(1);
+
+        // Format size
+        const formatSize = (bytes) => {
+            if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(2) + ' GB';
+            if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
+            if (bytes >= 1024) return (bytes / 1024).toFixed(0) + ' KB';
+            return bytes + ' B';
+        };
+
+        // Format speed
+        const formatSpeed = (bytesPerSec) => {
+            if (bytesPerSec >= 1048576) return (bytesPerSec / 1048576).toFixed(1) + ' MB/s';
+            if (bytesPerSec >= 1024) return (bytesPerSec / 1024).toFixed(0) + ' KB/s';
+            return bytesPerSec.toFixed(0) + ' B/s';
+        };
+
+        if (p.status === 'Downloading' && p.total > 0) {
+            const sizeInfo = `${formatSize(p.downloaded)} / ${formatSize(p.total)}`;
+            const speedInfo = formatSpeed(p.speed);
+            elProgressInfo.style.display = 'block';
+            elProgressText.innerText = `${sizeInfo} - ${speedInfo}`;
+            elProgressPercent.innerText = `${percent}%`;
+        } else {
+            elProgressInfo.style.display = 'block';
+            elProgressText.innerText = p.status;
+            elProgressPercent.innerText = `${percent}%`;
+        }
     });
 
     listen('download-complete', () => {
@@ -127,19 +229,33 @@ window.addEventListener('DOMContentLoaded', async () => {
         fetchManifest(true);
     });
 
+    // Listen for language change from tray menu
+    listen('change-language', (event) => {
+        const lang = event.payload;
+        setLanguage(lang);
+        saveConfigOnly();
+    });
+
     elActionBtn.onclick = handleAction;
 });
 
 function bindWindowControls() {
     const appWindow = window.__TAURI__.window.getCurrentWindow();
-    elMinimizeBtn.onclick = () => appWindow.minimize();
-    elCloseBtn.onclick = async () => {
-        // If MinimizeToTray is selected, hide window instead of closing
+
+    // Minimize button behavior depends on close_behavior setting
+    elMinimizeBtn.onclick = async () => {
         if (currentConfig && currentConfig.close_behavior === 'MinimizeToTray') {
-            appWindow.hide();
+            // Hide to system tray (not visible on taskbar)
+            await appWindow.hide();
         } else {
-            appWindow.close();
+            // Normal minimize (visible on taskbar)
+            await appWindow.minimize();
         }
+    };
+
+    // Close button always closes the app
+    elCloseBtn.onclick = async () => {
+        await appWindow.close();
     };
 }
 
@@ -150,6 +266,20 @@ function setLanguage(lang) {
 
     // Update Radio UI
     document.querySelectorAll(`input[name="lang"]`).forEach(r => r.checked = (r.value === lang));
+
+    // Update Settings modal labels
+    const s = STRINGS[lang];
+    const elSettingsTitle = document.getElementById('settings-title');
+    const elLabelLang = document.getElementById('label-language');
+    const elLabelCloseWindow = document.getElementById('label-close-window');
+    const elLabelMinTray = document.getElementById('label-minimize-tray');
+    const elLabelExit = document.getElementById('label-exit-launcher');
+
+    if (elSettingsTitle) elSettingsTitle.innerText = s.settings;
+    if (elLabelLang) elLabelLang.innerText = s.language;
+    if (elLabelCloseWindow) elLabelCloseWindow.innerText = s.closeWindow;
+    if (elLabelMinTray) elLabelMinTray.innerText = s.minimizeToTray;
+    if (elLabelExit) elLabelExit.innerText = s.exitLauncher;
 
     // Update UI Texts
     updateUI();
@@ -197,6 +327,11 @@ async function fetchManifest(force = false) {
         latestManifest = await invoke('get_manifest', { forceRefresh: force });
         elOfflineBanner.style.display = 'none';
 
+        // Load sidebar links from manifest
+        if (latestManifest.sidebar_links) {
+            sidebarLinks = latestManifest.sidebar_links;
+        }
+
         // Backgrounds
         if (latestManifest.backgrounds && latestManifest.backgrounds.length > 0) {
             startSlideshow(latestManifest.backgrounds);
@@ -214,7 +349,11 @@ async function fetchManifest(force = false) {
         } else {
             gameStatus = "ReadyToPlay";
         }
+
+        // Hide loading overlay after content loads
+        hideLoadingOverlay();
     } catch (err) {
+        hideLoadingOverlay();
         if (err && err.toString().includes("Offline")) {
             gameStatus = "Offline";
             elOfflineBanner.style.display = 'block';
@@ -383,5 +522,30 @@ function applyConfig(cfg) {
     if (cfg.close_behavior) {
         const r = document.querySelector(`input[name="close"][value="${cfg.close_behavior}"]`);
         if (r) r.checked = true;
+    }
+}
+
+// Loading overlay functions
+function startLoadingAnimation() {
+    if (!elLoadingImg || loadingImages.length === 0) return;
+
+    // Swap between loading images every 2 seconds
+    loadingAnimInterval = setInterval(() => {
+        loadingImgIndex = (loadingImgIndex + 1) % loadingImages.length;
+        elLoadingImg.src = loadingImages[loadingImgIndex];
+    }, 2000);
+}
+
+function hideLoadingOverlay() {
+    if (loadingAnimInterval) {
+        clearInterval(loadingAnimInterval);
+        loadingAnimInterval = null;
+    }
+    if (elLoadingOverlay) {
+        elLoadingOverlay.classList.add('hidden');
+        // Remove from DOM after animation
+        setTimeout(() => {
+            elLoadingOverlay.style.display = 'none';
+        }, 500);
     }
 }

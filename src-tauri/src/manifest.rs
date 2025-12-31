@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
+use std::collections::HashMap;
 use crate::paths;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -14,6 +15,8 @@ pub struct NewsItem {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct GameManifest {
     pub game_name: String,
+    #[serde(default)]
+    pub game_exe: Option<String>,  // Name of the game executable
     pub latest_version: String,
     pub game_zip: String,
     pub checksum: String,
@@ -22,6 +25,8 @@ pub struct GameManifest {
     #[serde(default)]
     pub maintenance_message: Option<String>,
     pub backgrounds: Vec<String>,
+    #[serde(default)]
+    pub sidebar_links: Option<HashMap<String, String>>,
     pub news: Vec<NewsItem>,
     pub languages: Vec<String>,
 }
