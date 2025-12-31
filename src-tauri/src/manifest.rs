@@ -1,21 +1,32 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::PathBuf;
+use std::collections::HashMap;
+use crate::paths;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NewsItem {
     pub title: String,
     pub image: String,
     pub date: String,
+    #[serde(default)]
+    pub link: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct GameManifest {
     pub game_name: String,
+    #[serde(default)]
+    pub game_exe: Option<String>,  // Name of the game executable
     pub latest_version: String,
     pub game_zip: String,
     pub checksum: String,
+    #[serde(default)]
+    pub server_status: Option<String>,  // "online", "maintenance", "closed"
+    #[serde(default)]
+    pub maintenance_message: Option<String>,
     pub backgrounds: Vec<String>,
+    #[serde(default)]
+    pub sidebar_links: Option<HashMap<String, String>>,
     pub news: Vec<NewsItem>,
     pub languages: Vec<String>,
 }
@@ -32,7 +43,8 @@ pub async fn fetch_manifest(url: &str) -> Result<GameManifest, Box<dyn std::erro
 }
 
 pub fn load_cached_manifest() -> Option<GameManifest> {
-    let path = PathBuf::from("cache/manifest.json");
+    let cache_dir = paths::get_cache_dir();
+    let path = cache_dir.join("manifest.json");
     if path.exists() {
         if let Ok(content) = fs::read_to_string(path) {
             if let Ok(manifest) = serde_json::from_str(&content) {
@@ -44,10 +56,11 @@ pub fn load_cached_manifest() -> Option<GameManifest> {
 }
 
 fn save_manifest_cache(manifest: &GameManifest) {
-    let path = PathBuf::from("cache/manifest.json");
-    // ensure cache dir exists
-    let _ = fs::create_dir_all("cache");
+    let cache_dir = paths::get_cache_dir();
+    let _ = fs::create_dir_all(&cache_dir);
+    let path = cache_dir.join("manifest.json");
     if let Ok(content) = serde_json::to_string_pretty(manifest) {
         let _ = fs::write(path, content);
     }
 }
+

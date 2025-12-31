@@ -1,0 +1,39 @@
+{
+  "game_name": "Gánh Rong",
+  "latest_version": "1.0.0",
+  "game_zip": "https://pub-XXXXXXXX.r2.dev/game/ganhrong-v1.0.0.zip",
+  "checksum": "sha256:32555FDE907F3996A44DB2B472EF9ED7A574C45B68ABB95AB225A4417CDD88CF",
+  "server_status": "online",
+  "maintenance_message": "",
+  "backgrounds": [
+    "https://pub-22ad0c737da74e26888b5a5c396658c5.r2.dev/11.png",
+    "https://pub-22ad0c737da74e26888b5a5c396658c5.r2.dev/2.png",
+    "https://pub-22ad0c737da74e26888b5a5c396658c5.r2.dev/1.png"
+  ],
+  "news": [
+    {
+      "title": "New Update: Cập nhật lại tính năng đặt tên và chọn nhân vật Nam và Nữ khi bắt đầu Game",
+      "image": "https://pub-22ad0c737da74e26888b5a5c396658c5.r2.dev/5.png",
+      "date": "2025.11.1",
+      "link": "https://ganhrong.tech"
+    },
+    {
+      "title": "New Update: Tính năng hiển thị Gánh Rồng khi đặt xuống trên bảng thông báo",
+      "image": "https://pub-22ad0c737da74e26888b5a5c396658c5.r2.dev/9.png",
+      "date": "2025.12.28",
+      "link": "https://ganhrong.tech"
+    },
+    {
+      "title": "New Update: Tính năng nhân viên, bắt buộc phải có nhân viên để hoạt động gánh rồng",
+      "image": "https://pub-22ad0c737da74e26888b5a5c396658c5.r2.dev/5.png",
+      "date": "2025.12.30",
+      "link": "https://ganhrong.tech"
+    }
+  ],
+  "languages": [
+    "vi",
+    "en",
+    "jp",
+    "zh"
+  ]
+}

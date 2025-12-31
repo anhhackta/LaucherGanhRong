@@ -45,33 +45,46 @@
             <!-- Left Area: Logo & News -->
             <div class="left-col">
                 <div class="logo-area">
-                    <img src="../src-tauri/icons/logo.png" alt="Game Logo" class="game-logo" id="game-logo">
+                    <a href="#" id="logo-link" title="Visit ganhrong.tech">
+                        <img src="assets/logo.png" alt="Game Logo" class="game-logo" id="game-logo">
+                    </a>
                     <!-- Backup text if needed, or hide it -->
                     <!-- <h1 class="game-title" id="game-title-display">Game Launcher</h1> -->
                 </div>
 
                 <div class="news-panel glass-panel" id="news-panel">
                     <div class="news-header">
-                        <h3>Events Notice</h3>
-                        <div class="dots"><span class="active"></span><span></span></div>
+                        <div class="news-tabs">
+                            <span class="tab active">Events</span>
+                            <span class="tab">Notice</span>
+                        </div>
                     </div>
-                    <div class="news-content" id="news-content-area">
-                        Loading news...
+                    <div class="news-carousel">
+                        <div class="news-slides" id="news-slides">
+                            <!-- News items rendered by JS -->
+                        </div>
+                        <button class="carousel-btn prev" id="news-prev">‹</button>
+                        <button class="carousel-btn next" id="news-next">›</button>
                     </div>
+                    <div class="news-footer">
+                        <div class="news-title" id="news-title">Loading...</div>
+                        <div class="news-date" id="news-date"></div>
+                    </div>
+                    <div class="news-dots" id="news-dots"></div>
                 </div>
             </div>
 
             <!-- Right Area: Sidebar -->
             <div class="right-col">
                 <div class="sidebar glass-panel">
-                    <button class="nav-item active" title="Home">
+                    <button class="nav-item active" data-link="" title="Home">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                             <polyline points="9 22 9 12 15 12 15 22"></polyline>
                         </svg>
                     </button>
-                    <button class="nav-item" title="Store">
+                    <button class="nav-item" data-link="store" title="Store">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
@@ -79,7 +92,7 @@
                             <path d="M16 10a4 4 0 0 1-8 0"></path>
                         </svg>
                     </button>
-                    <button class="nav-item" title="Mail">
+                    <button class="nav-item" data-link="mail" title="Mail">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z">
@@ -87,7 +100,7 @@
                             <polyline points="22,6 12,13 2,6"></polyline>
                         </svg>
                     </button>
-                    <button class="nav-item" title="Community">
+                    <button class="nav-item" data-link="community" title="Community">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <circle cx="12" cy="12" r="10"></circle>
@@ -98,7 +111,7 @@
                         </svg>
                     </button>
                     <div class="spacer"></div>
-                    <button class="nav-item" title="Help">
+                    <button class="nav-item" data-link="help" title="Help">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <circle cx="12" cy="12" r="10"></circle>
@@ -108,6 +121,11 @@
                     </button>
                 </div>
             </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay">
+            <img src="assets/loading1.png" alt="Loading" class="loading-img" id="loading-img">
         </div>
 
         <!-- Floating Bottom Area -->
@@ -131,28 +149,26 @@
     <div class="modal" id="settings-modal">
         <div class="modal-content glass-panel">
             <div class="modal-header">
-                <h2>Settings</h2>
+                <h2 id="settings-title">Settings</h2>
                 <button class="close-modal-x" id="close-modal-btn">×</button>
             </div>
             <div class="setting-row">
-                <label>Language</label>
+                <label id="label-language">Language</label>
                 <div class="radio-group">
-                    <label class="radio-label"><input type="radio" name="lang" value="vi"> Tiếng Việt</label>
+                    <label class="radio-label"><input type="radio" name="lang" value="vi"> Tieng Viet</label>
                     <label class="radio-label"><input type="radio" name="lang" value="en"> English</label>
                     <label class="radio-label"><input type="radio" name="lang" value="jp"> 日本語</label>
                     <label class="radio-label"><input type="radio" name="lang" value="zh"> 中文</label>
                 </div>
             </div>
             <div class="setting-row">
-                <label>Close Window</label>
+                <label id="label-close-window">Close Window</label>
                 <div class="radio-group vertical">
-                    <label class="radio-label"><input type="radio" name="close" value="MinimizeToTray"> Minimize to
-                        system tray</label>
-                    <label class="radio-label"><input type="radio" name="close" value="Exit"> Exit Launcher</label>
+                    <label class="radio-label"><input type="radio" name="close" value="MinimizeToTray"> <span
+                            id="label-minimize-tray">Minimize to system tray</span></label>
+                    <label class="radio-label"><input type="radio" name="close" value="Exit"> <span
+                            id="label-exit-launcher">Exit Launcher</span></label>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="primary-btn" id="save-settings">Save</button>
             </div>
         </div>
     </div>

@@ -1,109 +1,171 @@
-Game Launcher Walkthrough
-=========================
+# Gánh Rồng Launcher
 
-I have successfully created a minimal, production-ready single-game launcher using Tauri + Rust.
+Minimal, high-performance single-game desktop launcher built with **Tauri + Rust**.
 
-Architecture
-------------
+## Features
 
-1.  **Backend (Rust)**
-    
-    *   state.rs: Managed application state (Config, Manifest, Status).
-        
-    *   manifest.rs: Fetches manifest.json from R2 (or cache if offline).
-        
-    *   downloader.rs: Handles downloads, SHA256 verification, and atomic extraction. **Ensures game/version.txt is created.**
-        
-    *   game.rs: Checks local version vs manifest and launches the game.
-        
-    *   config.rs: Persists user settings (config.json).
-        
-    *   tray.rs: Handles system tray interactions.
-        
-2.  **Frontend (Vanilla JS)**
-    
-    *   Lightweight index.html and main.js.
-        
-    *   Glassmorphism UI with dark theme.
-        
-    *   Real-time stats updates via Tauri Events (download-progress, download-complete).
-        
-    *   Offline mode support.
-        
+- **Manifest-Driven**: Dynamic configuration fetched from Cloudflare R2
+- **Background Slideshow**: Rotating backgrounds (every 60s)
+- **Atomic Updates**: Safe `download → verify → extract → swap` process
+- **Frameless UI**: Modern, rounded-corner window with custom controls
+- **Multi-Language**: Vietnamese, English, Japanese, Chinese
+- **Instant Language Switch**: No restart required
+- **System Tray**: Minimize to tray / Exit options
+- **Offline Detection**: Graceful handling when offline
 
-Verification
-------------
+## Requirements
 
-### Build
+- Node.js 18+
+- Rust 1.70+
+- Windows 10/11
 
-Run the following command to build the production executable:
+## Setup
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   npm run tauri build   `
+```bash
+# Install dependencies
+npm install
 
-This generates the installer in src-tauri/target/release/bundle/.
+# Run in development
+npm run tauri dev
 
-### Manual Testing Guide
+# Build for production
+npm run tauri build
+```
 
-1.  **Startup**:
-    
-    *   Launcher opens.
-        
-    *   Checks internet.
-        
-    *   Loads manifest from URL (or cache).
-        
-    *   Shows "Install Game" if game missing.
-        
-2.  **Download Flow**:
-    
-    *   Click "Install".
-        
-    *   Progress bar appears.
-        
-    *   Game downloaded to cache/game.tmp.zip.
-        
-    *   Verified against checksum.
-        
-    *   Extracted to game/.
-        
-    *   version.txt created.
-        
-    *   Button changes to "Play".
-        
-3.  **Features**:
-    
-    *   **Manifest-Driven**: Configures game version, download URL, **background slideshow**, and news.
-        
-    *   **R2 Integration**: All assets hosted on Cloudflare R2.
-        
-    *   **Atomic Updates**: Safe update process (download -> verify -> extract -> swap).
-        
-    *   **Frameless UI**: Custom window with rounded corners and slideshow background.
-        
-    *   **Instant Localization**: Support for English, Vietnamese, and Japanese.
-        
-4.  **Offline Mode**:
-    
-    *   Disconnect internet.
-        
-    *   Restart Launcher.
-        
-    *   Shows "Offline Mode" banner.
-        
-    *   "Play" button disabled (per strict rules).
-        
-5.  **Settings**:
-    
-    *   Change "Close Behavior" to "Minimize to Tray".
-        
-    *   Close window -> App stays in tray.
-        
-    *   Right-click Tray -> Show/Quit.
-        
+## Folder Structure
 
-Configuration
--------------
+```
+LaucherGanhRong/
+├── src/                    # Frontend (HTML/CSS/JS)
+│   ├── index.html
+│   ├── styles.css
+│   └── main.js
+├── src-tauri/              # Rust backend
+│   ├── src/
+│   │   ├── lib.rs          # Main entry, commands
+│   │   ├── config.rs       # Settings persistence
+│   │   ├── manifest.rs     # Manifest fetch/cache
+│   │   ├── downloader.rs   # Download & install logic
+│   │   ├── game.rs         # Version check, launch
+│   │   └── tray.rs         # System tray
+│   └── icons/
+│       └── logo.png        # App logo
+├── cache/                  # Temporary download files
+├── game/                   # Installed game files
+├── manifest.json           # Sample manifest for R2
+└── README.md
+```
 
-Update MANIFEST\_URL in 
+## Cloudflare R2 Setup
 
-src-tauri/src/lib.rs to point to your Cloudflare R2 manifest.json.
+1. Create an R2 bucket in Cloudflare dashboard
+2. Enable **Public Access** on the bucket
+3. Upload files:
+   - `manifest.json` (from project root)
+   - `game-v1.0.0.zip` (your game archive)
+   - Background images (`bg1.jpg`, `bg2.jpg`, etc.)
+   - News images
+
+4. Get public URLs and update `manifest.json`:
+   ```json
+   {
+     "game_zip": "https://pub-XXXXX.r2.dev/game/game-v1.0.0.zip",
+     "backgrounds": ["https://pub-XXXXX.r2.dev/assets/bg1.jpg"],
+     ...
+   }
+   ```
+
+5. Update `MANIFEST_URL` in `src-tauri/src/lib.rs`:
+   ```rust
+   const MANIFEST_URL: &str = "https://pub-XXXXX.r2.dev/manifest.json";
+   ```
+
+## Manifest Format
+
+```json
+{
+  "game_name": "Gánh Rồng",
+  "latest_version": "1.0.0",
+  "game_zip": "https://...",
+  "checksum": "sha256:HASH_OF_ZIP",
+  "server_status": "online",
+  "maintenance_message": "",
+  "backgrounds": ["https://...", "https://..."],
+  "news": [
+    {
+      "title": "Update 1.0",
+      "image": "https://...",
+      "date": "2024.12.30",
+      "link": "https://yoursite.com/news/1"
+    }
+  ],
+  "languages": ["vi", "en", "jp", "zh"]
+}
+```
+
+### Server Status Values
+
+| Value | Description |
+|-------|-------------|
+| `online` | Game is playable |
+| `maintenance` | Server maintenance, show message |
+| `closed` | Game is closed/offline |
+
+## Game ZIP Naming Convention
+
+Name your game zip file using this format:
+
+```
+{game-name}-v{version}.zip
+```
+
+**Examples:**
+- `ganhrong-v1.0.0.zip`
+- `ganhrong-v1.0.1.zip`
+- `ganhrong-v2.0.0.zip`
+
+**Rules:**
+1. Use lowercase letters
+2. Use hyphens `-` instead of spaces
+3. Prefix version with `v`
+4. Version format: `major.minor.patch` (e.g., `1.0.0`)
+
+**Folder Structure Inside ZIP:**
+```
+ganhrong-v1.0.0.zip
+└── game.exe           (required - main executable)
+└── assets/            (game assets)
+└── data/              (game data)
+└── ...                (other files)
+```
+
+> **Important:** The `version.txt` file is created automatically by the launcher after successful installation. Do NOT include it in your zip.
+
+## Button Logic
+
+| Condition | Button |
+|-----------|--------|
+| `game/` folder missing | **Download** |
+| Local version ≠ Manifest version | **Update** |
+| Version matches | **Play** |
+| Offline | Disabled |
+
+## Performance Targets
+
+- Idle RAM: < 80MB
+- Startup: < 1 second
+- Binary size: < 15MB
+
+## Generate Checksum
+
+```bash
+# Windows PowerShell
+Get-FileHash game.zip -Algorithm SHA256
+
+# Linux/Mac
+sha256sum game.zip
+```
+
+## License
+
+MIT

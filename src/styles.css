@@ -98,6 +98,9 @@ body {
   transition: color 0.2s, transform 0.2s;
   padding: 5px;
   border-radius: 5px;
+  z-index: 100;
+  position: relative;
+  pointer-events: auto;
 }
 
 .control-btn:hover {
@@ -159,81 +162,148 @@ body {
 }
 
 .news-panel {
-  height: 220px;
-  width: 320px;
-  padding: 20px;
+  width: 380px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s ease;
-}
-
-.news-panel:hover {
-  transform: translateY(-5px);
-  background: rgba(0, 0, 0, 0.5);
+  overflow: hidden;
 }
 
 .news-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
+  padding: 15px 20px 10px;
 }
 
-.news-header h3 {
-  margin: 0;
-  font-size: 1rem;
+.news-tabs {
+  display: flex;
+  gap: 15px;
+}
+
+.news-tabs .tab {
+  font-size: 0.95rem;
   font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.news-tabs .tab.active {
+  color: #ff6b6b;
+}
+
+.news-tabs .tab:hover {
   color: white;
 }
 
-.dots {
-  display: flex;
-  gap: 5px;
-}
-
-.dots span {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.dots span.active {
-  background: var(--accent-color);
-  width: 12px;
-  border-radius: 3px;
-}
-
-.news-content {
-  flex: 1;
+/* Carousel */
+.news-carousel {
+  position: relative;
+  width: 100%;
+  height: 180px;
   overflow: hidden;
-  /* Hide scroll for cleaner usage, or custom scrollbar */
 }
 
-.news-item {
+.news-slides {
   display: flex;
-  align-items: center;
-  margin-bottom: 12px;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s ease-in-out;
+}
+
+.news-slide {
+  min-width: 100%;
+  height: 100%;
   cursor: pointer;
 }
 
-.news-item img {
-  width: 50px;
-  height: 50px;
-  border-radius: 8px;
+.news-slide img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  margin-right: 12px;
 }
 
-.news-text h4 {
-  margin: 0 0 4px 0;
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.news-carousel:hover .carousel-btn {
+  opacity: 1;
+}
+
+.carousel-btn.prev {
+  left: 10px;
+}
+
+.carousel-btn.next {
+  right: 10px;
+}
+
+.carousel-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.news-footer {
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.news-title {
   font-size: 0.9rem;
-  line-height: 1.2;
+  font-weight: 600;
+  color: white;
+  flex: 1;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.news-text span {
-  font-size: 0.75rem;
+.news-date {
+  font-size: 0.8rem;
   color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.news-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding-bottom: 15px;
+}
+
+.news-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.news-dots .dot.active {
+  background: var(--accent-color);
+  width: 20px;
+  border-radius: 4px;
 }
 
 
@@ -478,4 +548,46 @@ body {
 
 .primary-btn:hover {
   background: var(--accent-hover);
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  border-radius: 16px;
+  transition: opacity 0.5s ease-out;
+}
+
+.loading-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loading-img {
+  width: 80%;
+  height: 80%;
+  object-fit: cover;
+  object-position: center;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
 }

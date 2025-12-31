@@ -3,16 +3,21 @@ use reqwest::Client;
 use std::cmp::min;
 use std::fs::{self, File};
 use std::io::{self, BufReader, Write};
-use std::path::{Path, PathBuf};
+use std::path::Path;
+use std::time::Instant;
 use zip::ZipArchive;
 use sha2::{Sha256, Digest};
 use tauri::{AppHandle, Emitter};
+use crate::paths;
 
 // Event for frontend progress
 #[derive(Clone, serde::Serialize)]
 struct DownloadProgressPayload {
-    progress: f32, // 0.0 to 100.0
+    progress: f32,        // 0.0 to 100.0
     status: String,
+    downloaded: u64,      // bytes downloaded
+    total: u64,           // total bytes
+    speed: f64,           // bytes per second
 }
 
 pub async fn download_and_install_game<F>(
@@ -24,7 +29,11 @@ pub async fn download_and_install_game<F>(
 ) -> Result<(), Box<dyn std::error::Error>> 
 where F: Fn(f32, String) + Send + Sync + 'static 
 {
-    let target_path = PathBuf::from("cache/game.tmp.zip");
+    let cache_dir = paths::get_cache_dir();
+    let game_dir = paths::get_game_dir();
+    
+    let _ = fs::create_dir_all(&cache_dir);
+    let target_path = cache_dir.join("game.tmp.zip");
     
     // 1. Download
     progress_callback(0.0, "Downloading...".to_string());
@@ -36,31 +45,65 @@ where F: Fn(f32, String) + Send + Sync + 'static
     let mut file = File::create(&target_path)?;
     let mut downloaded: u64 = 0;
     let mut stream = res.bytes_stream();
+    
+    // Speed calculation
+    let _start_time = Instant::now();
+    let mut last_update = Instant::now();
+    let mut last_downloaded: u64 = 0;
+    let mut current_speed: f64 = 0.0;
 
     while let Some(item) = stream.next().await {
         let chunk = item?;
         file.write_all(&chunk)?;
         downloaded = min(downloaded + (chunk.len() as u64), total_size);
         
+        // Calculate speed every 500ms
+        let now = Instant::now();
+        let elapsed = now.duration_since(last_update).as_secs_f64();
+        if elapsed >= 0.5 {
+            let bytes_since = downloaded - last_downloaded;
+            current_speed = bytes_since as f64 / elapsed;
+            last_downloaded = downloaded;
+            last_update = now;
+        }
+        
         if total_size > 0 {
             let p = (downloaded as f32 / total_size as f32) * 100.0;
-            app.emit("download-progress", DownloadProgressPayload { progress: p, status: "Downloading".to_string() })?;
+            app.emit("download-progress", DownloadProgressPayload { 
+                progress: p, 
+                status: "Downloading".to_string(),
+                downloaded,
+                total: total_size,
+                speed: current_speed,
+            })?;
         }
     }
 
     // 2. Verify
     progress_callback(100.0, "Verifying...".to_string());
-    app.emit("download-progress", DownloadProgressPayload { progress: 100.0, status: "Verifying".to_string() })?;
+    app.emit("download-progress", DownloadProgressPayload { 
+        progress: 100.0, 
+        status: "Verifying".to_string(),
+        downloaded: total_size,
+        total: total_size,
+        speed: 0.0,
+    })?;
     
     if !verify_hash(&target_path, checksum)? {
-        return Err("Checksum verification failed".into());
+        return Err("Phiên bản tải về bị lỗi. Vui lòng tải lại.".into());
     }
 
     // 3. Extract (Atomic-ish)
     progress_callback(100.0, "Installing...".to_string());
-    app.emit("download-progress", DownloadProgressPayload { progress: 100.0, status: "Installing".to_string() })?;
+    app.emit("download-progress", DownloadProgressPayload { 
+        progress: 100.0, 
+        status: "Installing".to_string(),
+        downloaded: total_size,
+        total: total_size,
+        speed: 0.0,
+    })?;
     
-    let extract_path = PathBuf::from("cache/extracted_tmp");
+    let extract_path = cache_dir.join("extracted_tmp");
     if extract_path.exists() {
         fs::remove_dir_all(&extract_path)?;
     }
@@ -72,15 +115,14 @@ where F: Fn(f32, String) + Send + Sync + 'static
     fs::write(extract_path.join("version.txt"), version)?;
 
     // 4. Move to game/
-    let game_path = PathBuf::from("game");
-    if game_path.exists() {
-        fs::remove_dir_all(&game_path)?;
+    if game_dir.exists() {
+        fs::remove_dir_all(&game_dir)?;
     }
     
     // Rename/Move
     // Note: rename only works on same filesystem. 
     // Since cache and game are likely on same drive, this is usually atomic or fast.
-    fs::rename(extract_path, &game_path)?;
+    fs::rename(&extract_path, &game_dir)?;
     
     // Write installed version provided by manifest logic elsewhere, 
     // but here we just ensure the files are there.
@@ -107,7 +149,8 @@ fn verify_hash(path: &Path, expected_hash_prefix: &str) -> Result<bool, std::io:
         expected_hash_prefix
     };
 
-    Ok(hash_str == expected) // Exact match or full hash? Usually full hash.
+    // Case-insensitive comparison
+    Ok(hash_str.to_lowercase() == expected.to_lowercase())
 }
 
 fn extract_zip(zip_path: &Path, target_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {

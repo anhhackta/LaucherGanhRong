@@ -2,6 +2,7 @@ mod config;
 mod downloader;
 mod game;
 mod manifest;
+mod paths;
 mod state;
 mod tray;
 
@@ -10,7 +11,7 @@ use crate::state::{AppState, GameStatus};
 use crate::config::LauncherConfig;
 use crate::manifest::GameManifest;
 
-const MANIFEST_URL: &str = "https://example.com/manifest.json"; // TODO: Replace with actual R2 URL
+const MANIFEST_URL: &str = "https://pub-22ad0c737da74e26888b5a5c396658c5.r2.dev/manifest.json"; // TODO: Replace with actual R2 URL
 
 #[tauri::command]
 async fn get_manifest(app: AppHandle, force_refresh: bool) -> Result<GameManifest, String> {
@@ -109,10 +110,12 @@ fn launch_game(app: AppHandle) -> Result<(), String> {
     
     // Strict check
     let local = game::get_local_version();
+    let exe_name: String;
     if let Some(m) = manifest {
         if local != m.latest_version {
             return Err("Version mismatch. Please update.".to_string());
         }
+        exe_name = m.game_exe.clone().unwrap_or_else(|| "game.exe".to_string());
     } else {
         // If offline and can play? User said "Manifest Fetch ... when launcher start".
         // If offline, we might have cached manifest.
@@ -127,7 +130,7 @@ fn launch_game(app: AppHandle) -> Result<(), String> {
         return Err("Cannot verify version (Offline or No Manifest)".to_string());
     }
 
-    game::launch_game("game.exe").map_err(|e| e.to_string())?;
+    game::launch_game(&exe_name).map_err(|e| e.to_string())?;
     
     // Auto-close if configured
     let config = state.config.lock().unwrap();

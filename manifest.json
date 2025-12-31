@@ -1,0 +1,46 @@
+{
+    "game_name": "Ganh Rong",
+    "game_exe": "Ganh _Rong_1.1.exe",
+    "latest_version": "1.0.0",
+    "game_zip": "https://pub-22ad0c737da74e26888b5a5c396658c5.r2.dev/ganhrong-v1.0.0.zip",
+    "checksum": "sha256:43CAD79CD871747BFBA7475D92A56B8FB2A3B932DB27BFBA502A9DA16320F0A9",
+    "server_status": "online",
+    "maintenance_message": "",
+    "backgrounds": [
+        "https://pub-22ad0c737da74e26888b5a5c396658c5.r2.dev/11.png",
+        "https://pub-22ad0c737da74e26888b5a5c396658c5.r2.dev/2.png",
+        "https://pub-22ad0c737da74e26888b5a5c396658c5.r2.dev/1.png"
+    ],
+    "sidebar_links": {
+        "store": "https://ganhrong.tech/",
+        "mail": "https://ganhrong.tech/",
+        "community": "https://ganhrong.tech/",
+        "help": "https://ganhrong.tech/"
+    },
+    "news": [
+        {
+            "title": "New Update: Cap nhat lai tinh nang dat ten va chon nhan vat Nam va Nu khi bat dau Game",
+            "image": "https://pub-22ad0c737da74e26888b5a5c396658c5.r2.dev/5.png",
+            "date": "2025.11.1",
+            "link": "https://ganhrong.tech"
+        },
+        {
+            "title": "New Update: Tinh nang hien thi Ganh Rong khi dat xuong tren bang thong bao",
+            "image": "https://pub-22ad0c737da74e26888b5a5c396658c5.r2.dev/9.png",
+            "date": "2025.12.28",
+            "link": "https://ganhrong.tech"
+        },
+        {
+            "title": "New Update: Tinh nang nhan vien, bat buoc phai co nhan vien de hoat dong ganh rong",
+            "image": "https://pub-22ad0c737da74e26888b5a5c396658c5.r2.dev/5.png",
+            "date": "2025.12.30",
+            "link": "https://ganhrong.tech"
+        }
+    ],
+    "languages": [
+        "vi",
+        "en",
+        "jp",
+        "zh"
+    ]
+}

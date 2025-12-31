@@ -10,15 +10,71 @@ let gameStatus = "Checking";
 
 // Localization Map
 const STRINGS = {
-    "en": { "download": "Download", "play": "Play", "update": "Update", "checking": "Checking...", "offline": "Offline" },
-    "vi": { "download": "Tải Game", "play": "Chơi Ngay", "update": "Cập Nhật", "checking": "Đang kiểm tra...", "offline": "Mất mạng" },
-    "jp": { "download": "ダウンロード", "play": "プレイ", "update": "更新", "checking": "確認中...", "offline": "オフライン" }
+    "en": {
+        "download": "Download",
+        "play": "Play",
+        "update": "Update",
+        "checking": "Checking...",
+        "offline": "Offline",
+        "downloading": "Downloading...",
+        "pause": "Pause",
+        "resume": "Resume",
+        "settings": "Settings",
+        "language": "Language",
+        "closeWindow": "Close Window",
+        "minimizeToTray": "Minimize to System Tray",
+        "exitLauncher": "Exit Launcher"
+    },
+    "vi": {
+        "download": "Tải Game",
+        "play": "Chơi ngay",
+        "update": "Cập nhật",
+        "checking": "Đang kiểm tra...",
+        "offline": "Không có mạng",
+        "downloading": "Đang tải...",
+        "pause": "Tạm dừng",
+        "resume": "Tiếp tục",
+        "settings": "Cài đặt",
+        "language": "Ngôn ngữ",
+        "closeWindow": "Đóng cửa sổ",
+        "minimizeToTray": "Thu nhỏ xuống khay",
+        "exitLauncher": "Thoát Launcher"
+    },
+    "jp": {
+        "download": "ダウンロード",
+        "play": "プレイ",
+        "update": "更新",
+        "checking": "確認中...",
+        "offline": "オフライン",
+        "downloading": "ダウンロード中...",
+        "pause": "一時停止",
+        "resume": "再開",
+        "settings": "設定",
+        "language": "言語",
+        "closeWindow": "ウィンドウを閉じる",
+        "minimizeToTray": "トレイに最小化",
+        "exitLauncher": "ランチャーを終了"
+    },
+    "zh": {
+        "download": "下载",
+        "play": "开始游戏",
+        "update": "更新",
+        "checking": "检查中...",
+        "offline": "离线",
+        "downloading": "下载中...",
+        "pause": "暂停",
+        "resume": "继续",
+        "settings": "设置",
+        "language": "语言",
+        "closeWindow": "关闭窗口",
+        "minimizeToTray": "最小化到托盘",
+        "exitLauncher": "退出启动器"
+    }
 };
 let currentLang = "en";
 
 // Elements
 const elBackground = document.getElementById('background');
-const elNewsContent = document.getElementById('news-content-area');
 const elActionBtn = document.getElementById('action-btn');
 const elBtnText = document.getElementById('btn-text');
 const elProgressInfo = document.getElementById('progress-info');
@@ -26,11 +82,18 @@ const elProgressText = document.getElementById('progress-text');
 const elProgressPercent = document.getElementById('progress-percent');
 const elOfflineBanner = document.getElementById('offline-banner');
 
+// News Carousel Elements
+const elNewsSlides = document.getElementById('news-slides');
+const elNewsTitle = document.getElementById('news-title');
+const elNewsDate = document.getElementById('news-date');
+const elNewsDots = document.getElementById('news-dots');
+const elNewsPrev = document.getElementById('news-prev');
+const elNewsNext = document.getElementById('news-next');
+
 // Modals
 const elSettingsModal = document.getElementById('settings-modal');
 const elSettingsBtn = document.getElementById('settings-btn');
 const elCloseModalBtn = document.getElementById('close-modal-btn');
-const elSaveSettings = document.getElementById('save-settings');
 
 // Win Controls
 const elMinimizeBtn = document.getElementById('minimize-btn');
@@ -39,21 +102,44 @@ const elCloseBtn = document.getElementById('close-btn');
 // Sidebar
 const navItems = document.querySelectorAll('.nav-item');
 
+// Loading Overlay
+const elLoadingOverlay = document.getElementById('loading-overlay');
+const elLoadingImg = document.getElementById('loading-img');
+const loadingImages = ['assets/loading1.png', 'assets/loading2.png'];
+let loadingImgIndex = 0;
+let loadingAnimInterval = null;
+
 // Slideshow
 let bgIndex = 0;
 let bgInterval = null;
 
+// News Carousel
+let newsData = [];
+let newsIndex = 0;
+let newsInterval = null;
+
+// Sidebar links from manifest
+let sidebarLinks = {};
+
 window.addEventListener('DOMContentLoaded', async () => {
+    // Start loading animation
+    startLoadingAnimation();
+
     // Basic Listeners
     elSettingsBtn.onclick = () => elSettingsModal.style.display = 'flex';
     elCloseModalBtn.onclick = () => elSettingsModal.style.display = 'none';
-    elSaveSettings.onclick = saveSettings; // Still needed for Close Behavior? User said "instant lang switch" NO save button.
 
-    // Sidebar interaction
+    // Sidebar interaction - Home stays active, others open links
     navItems.forEach(item => {
         item.onclick = () => {
-            navItems.forEach(n => n.classList.remove('active'));
-            item.classList.add('active');
+            const linkKey = item.dataset.link;
+            if (!linkKey) {
+                // Home button - do nothing, already active
+                return;
+            }
+            // Open link from manifest or default
+            const url = sidebarLinks[linkKey] || `https://ganhrong.tech/${linkKey}`;
+            window.__TAURI__.opener.openUrl(url);
         };
     });
 
@@ -61,11 +147,25 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('input[name="lang"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
             setLanguage(e.target.value);
-            // Optional: Save config immediately? User said "do change language right away without save button".
-            // We can persist it in background.
             saveConfigOnly();
         });
     });
+
+    // Close Behavior Radio Listeners (Instant Save)
+    document.querySelectorAll('input[name="close"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            saveConfigOnly();
+        });
+    });
+
+    // Logo click - open website
+    const logoLink = document.getElementById('logo-link');
+    if (logoLink) {
+        logoLink.onclick = (e) => {
+            e.preventDefault();
+            window.__TAURI__.opener.openUrl('https://ganhrong.tech');
+        };
+    }
 
     bindWindowControls();
 
@@ -82,8 +182,35 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     // Listeners
     listen('download-progress', (event) => {
-        const payload = event.payload;
-        updateProgress(payload.progress, payload.status);
+        const p = event.payload;
+        const percent = p.progress.toFixed(1);
+
+        // Format size
+        const formatSize = (bytes) => {
+            if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(2) + ' GB';
+            if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
+            if (bytes >= 1024) return (bytes / 1024).toFixed(0) + ' KB';
+            return bytes + ' B';
+        };
+
+        // Format speed
+        const formatSpeed = (bytesPerSec) => {
+            if (bytesPerSec >= 1048576) return (bytesPerSec / 1048576).toFixed(1) + ' MB/s';
+            if (bytesPerSec >= 1024) return (bytesPerSec / 1024).toFixed(0) + ' KB/s';
+            return bytesPerSec.toFixed(0) + ' B/s';
+        };
+
+        if (p.status === 'Downloading' && p.total > 0) {
+            const sizeInfo = `${formatSize(p.downloaded)} / ${formatSize(p.total)}`;
+            const speedInfo = formatSpeed(p.speed);
+            elProgressInfo.style.display = 'block';
+            elProgressText.innerText = `${sizeInfo} - ${speedInfo}`;
+            elProgressPercent.innerText = `${percent}%`;
+        } else {
+            elProgressInfo.style.display = 'block';
+            elProgressText.innerText = p.status;
+            elProgressPercent.innerText = `${percent}%`;
+        }
     });
 
     listen('download-complete', () => {
@@ -102,21 +229,51 @@ window.addEventListener('DOMContentLoaded', async () => {
         fetchManifest(true);
     });
 
+    // Listen for language change from tray menu
+    listen('change-language', (event) => {
+        const lang = event.payload;
+        setLanguage(lang);
+        saveConfigOnly();
+    });
+
     elActionBtn.onclick = handleAction;
 });
 
 function bindWindowControls() {
-    const appWindow = window.__TAURI__.window.getCurrentWindow();
-    elMinimizeBtn.onclick = () => appWindow.minimize();
-    elCloseBtn.onclick = async () => {
-        // Use configured behavior or default
-        if (currentConfig && currentConfig.close_behavior === 'Exit') {
-            appWindow.close();
-        } else {
-            appWindow.hide(); // Minimize to tray if configured, usually hide window
-            // If tray logic is "MinimizeToTray" -> hide.
-        }
-    };
+    try {
+        const appWindow = window.__TAURI__.window.getCurrentWindow();
+        console.log('Window controls binding...', appWindow);
+
+        // Minimize button behavior depends on close_behavior setting
+        elMinimizeBtn.onclick = async () => {
+            console.log('Minimize clicked, config:', currentConfig);
+            try {
+                if (currentConfig && currentConfig.close_behavior === 'MinimizeToTray') {
+                    // Hide to system tray (not visible on taskbar)
+                    await appWindow.hide();
+                } else {
+                    // Normal minimize (visible on taskbar)
+                    await appWindow.minimize();
+                }
+            } catch (err) {
+                console.error('Minimize error:', err);
+            }
+        };
+
+        // Close button always closes the app
+        elCloseBtn.onclick = async () => {
+            console.log('Close clicked');
+            try {
+                await appWindow.close();
+            } catch (err) {
+                console.error('Close error:', err);
+            }
+        };
+
+        console.log('Window controls bound successfully');
+    } catch (err) {
+        console.error('Failed to bind window controls:', err);
+    }
 }
 
 // Language Logic
@@ -126,6 +283,20 @@ function setLanguage(lang) {
 
     // Update Radio UI
     document.querySelectorAll(`input[name="lang"]`).forEach(r => r.checked = (r.value === lang));
+
+    // Update Settings modal labels
+    const s = STRINGS[lang];
+    const elSettingsTitle = document.getElementById('settings-title');
+    const elLabelLang = document.getElementById('label-language');
+    const elLabelCloseWindow = document.getElementById('label-close-window');
+    const elLabelMinTray = document.getElementById('label-minimize-tray');
+    const elLabelExit = document.getElementById('label-exit-launcher');
+
+    if (elSettingsTitle) elSettingsTitle.innerText = s.settings;
+    if (elLabelLang) elLabelLang.innerText = s.language;
+    if (elLabelCloseWindow) elLabelCloseWindow.innerText = s.closeWindow;
+    if (elLabelMinTray) elLabelMinTray.innerText = s.minimizeToTray;
+    if (elLabelExit) elLabelExit.innerText = s.exitLauncher;
 
     // Update UI Texts
     updateUI();
@@ -173,6 +344,11 @@ async function fetchManifest(force = false) {
         latestManifest = await invoke('get_manifest', { forceRefresh: force });
         elOfflineBanner.style.display = 'none';
 
+        // Load sidebar links from manifest
+        if (latestManifest.sidebar_links) {
+            sidebarLinks = latestManifest.sidebar_links;
+        }
+
         // Backgrounds
         if (latestManifest.backgrounds && latestManifest.backgrounds.length > 0) {
             startSlideshow(latestManifest.backgrounds);
@@ -190,7 +366,11 @@ async function fetchManifest(force = false) {
         } else {
             gameStatus = "ReadyToPlay";
         }
+
+        // Hide loading overlay after content loads
+        hideLoadingOverlay();
     } catch (err) {
+        hideLoadingOverlay();
         if (err && err.toString().includes("Offline")) {
             gameStatus = "Offline";
             elOfflineBanner.style.display = 'block';
@@ -239,22 +419,90 @@ function updateProgress(progress, status) {
 }
 
 function renderNews(news) {
-    if (!news || news.length === 0) {
-        elNewsContent.innerHTML = "<div>No news available</div>";
+    newsData = news || [];
+    if (newsData.length === 0) {
+        elNewsSlides.innerHTML = '<div class="news-slide"><div style="padding:40px;text-align:center;color:#888">No news available</div></div>';
+        elNewsTitle.innerText = '';
+        elNewsDate.innerText = '';
         return;
     }
-    let html = "";
-    news.forEach(item => {
-        html += `
-        <div class="news-item">
-            <img src="${item.image}">
-            <div class="news-text">
-                <h4>${item.title}</h4>
-                <span>${item.date}</span>
-            </div>
-        </div>`;
+
+    // Create slides
+    let slidesHtml = '';
+    let dotsHtml = '';
+    newsData.forEach((item, i) => {
+        slidesHtml += `<div class="news-slide" data-index="${i}" data-link="${item.link || ''}"><img src="${item.image}" alt=""></div>`;
+        dotsHtml += `<span class="dot ${i === 0 ? 'active' : ''}" data-index="${i}"></span>`;
     });
-    elNewsContent.innerHTML = html;
+
+    elNewsSlides.innerHTML = slidesHtml;
+    elNewsDots.innerHTML = dotsHtml;
+
+    // Set initial
+    newsIndex = 0;
+    updateNewsDisplay();
+
+    // Add click listeners to slides
+    document.querySelectorAll('.news-slide').forEach(slide => {
+        slide.onclick = () => {
+            const link = slide.dataset.link;
+            if (link) window.__TAURI__.opener.openUrl(link);
+        };
+    });
+
+    // Add click listeners to dots
+    document.querySelectorAll('.news-dots .dot').forEach(dot => {
+        dot.onclick = () => {
+            newsIndex = parseInt(dot.dataset.index);
+            updateNewsDisplay();
+            resetNewsInterval();
+        };
+    });
+
+    // Navigation buttons
+    elNewsPrev.onclick = () => {
+        newsIndex = (newsIndex - 1 + newsData.length) % newsData.length;
+        updateNewsDisplay();
+        resetNewsInterval();
+    };
+
+    elNewsNext.onclick = () => {
+        newsIndex = (newsIndex + 1) % newsData.length;
+        updateNewsDisplay();
+        resetNewsInterval();
+    };
+
+    // Start auto-slide
+    startNewsInterval();
+}
+
+function updateNewsDisplay() {
+    if (newsData.length === 0) return;
+
+    // Move slides
+    elNewsSlides.style.transform = `translateX(-${newsIndex * 100}%)`;
+
+    // Update title and date
+    const current = newsData[newsIndex];
+    elNewsTitle.innerText = current.title;
+    elNewsDate.innerText = current.date;
+
+    // Update dots
+    document.querySelectorAll('.news-dots .dot').forEach((dot, i) => {
+        dot.classList.toggle('active', i === newsIndex);
+    });
+}
+
+function startNewsInterval() {
+    if (newsInterval) clearInterval(newsInterval);
+    newsInterval = setInterval(() => {
+        newsIndex = (newsIndex + 1) % newsData.length;
+        updateNewsDisplay();
+    }, 15000); // 15 seconds
+}
+
+function resetNewsInterval() {
+    startNewsInterval();
 }
 
 async function handleAction() {
@@ -291,5 +539,30 @@ function applyConfig(cfg) {
     if (cfg.close_behavior) {
         const r = document.querySelector(`input[name="close"][value="${cfg.close_behavior}"]`);
         if (r) r.checked = true;
+    }
+}
+
+// Loading overlay functions
+function startLoadingAnimation() {
+    if (!elLoadingImg || loadingImages.length === 0) return;
+
+    // Swap between loading images every 2 seconds
+    loadingAnimInterval = setInterval(() => {
+        loadingImgIndex = (loadingImgIndex + 1) % loadingImages.length;
+        elLoadingImg.src = loadingImages[loadingImgIndex];
+    }, 2000);
+}
+
+function hideLoadingOverlay() {
+    if (loadingAnimInterval) {
+        clearInterval(loadingAnimInterval);
+        loadingAnimInterval = null;
+    }
+    if (elLoadingOverlay) {
+        elLoadingOverlay.classList.add('hidden');
+        // Remove from DOM after animation
+        setTimeout(() => {
+            elLoadingOverlay.style.display = 'none';
+        }, 500);
     }
 }
